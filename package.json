@@ -1,0 +1,9 @@
+{
+  "name": "mta_project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/hello.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
