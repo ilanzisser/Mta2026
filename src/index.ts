@@ -1,6 +1,14 @@
+import express from 'express';
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
+
+app.listen(port, () => {
+  return console.log(`Express is listening at http://localhost:${port}`);
+});
 
 
-console.log( "Starting program....");
-let i = 1;
-setInterval( () => { console.log( `In timeout: ${++i}` ) }, 1000 )
-console.log( "Ending program....");
+
