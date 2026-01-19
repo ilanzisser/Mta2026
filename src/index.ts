@@ -9,7 +9,10 @@ const port = 3000;
 const set_content_type = function (req : express.Request, 
             res : express.Response, next : express.NextFunction) 
 {
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    if ( req.url == '/' || req.url.includes( "?query"))
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+    else
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
     next()
 }
 
@@ -29,10 +32,6 @@ async function init( file_path : string  ) : Promise< Map<number, User>>
     const ret = await load_users( file_path );
     return ret;
 }
-
-app.get('/', (req : express.Request, res : express.Response ) => {
-  res.send('Hello World!');
-});
 
 
 function get_user( req : express.Request, res : express.Response ) : void
@@ -99,6 +98,46 @@ function get_users( req : express.Request, res : express.Response ) : void
     res.send( JSON.stringify( all_users) );
 }   
 app.get('/users/', get_users );
+
+async function get_home( req : express.Request, res : express.Response ) : Promise<void>
+{
+    const query = req.query.query ?? '';
+    const MY_API_KEY = '21a3f99d0e6d4a9fa5a82405261901'
+    const url = `https://api.weatherapi.com/v1/current.json?key=${MY_API_KEY}&q=${query}&aqi=no`
+
+    let div_text = ''
+    if ( query )
+    {
+        const response = await fetch( url  );
+        if ( !response.ok )
+        {
+            const err = await response.text();
+            div_text = `Error<br>${err}<br>Status code: ${response.status}`
+        }
+        else
+        {
+            const json  = await response.json();
+            div_text = JSON.stringify( json, null, 4);
+        }
+    }
+
+    res.send( `
+        <html>
+            <head>
+                <title>MTA Example</title>
+            </head>
+            <body>
+                <form method='GET' action='./'>
+                    <input type='text'  name='query' value=${query} ></input>
+                    <input type='submit'/>
+                </form>
+                <pre><code>
+                    ${div_text}
+                </code></pre>
+            </body>
+        </html>`)
+} 
+app.get( '/', get_home);
 
 init( FILE_PATH ).then(
 

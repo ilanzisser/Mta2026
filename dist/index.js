@@ -18,7 +18,10 @@ const app = (0, express_1.default)();
 const port = 3000;
 // Middleware for Express
 const set_content_type = function (req, res, next) {
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    if (req.url == '/' || req.url.includes("?query"))
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+    else
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
     next();
 };
 app.use(set_content_type);
@@ -35,9 +38,6 @@ function init(file_path) {
         return ret;
     });
 }
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
 function get_user(req, res) {
     const id = req.params.id;
     const ret = (0, user_db_1.get_user_by_id)(Number(id), users_map);
@@ -89,6 +89,42 @@ function get_users(req, res) {
     res.send(JSON.stringify(all_users));
 }
 app.get('/users/', get_users);
+function get_home(req, res) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const query = (_a = req.query.query) !== null && _a !== void 0 ? _a : '';
+        const MY_API_KEY = '21a3f99d0e6d4a9fa5a82405261901';
+        const url = `https://api.weatherapi.com/v1/current.json?key=${MY_API_KEY}&q=${query}&aqi=no`;
+        let div_text = '';
+        if (query) {
+            const response = yield fetch(url);
+            if (!response.ok) {
+                const err = yield response.text();
+                div_text = `Error<br>${err}<br>Status code: ${response.status}`;
+            }
+            else {
+                const json = yield response.json();
+                div_text = JSON.stringify(json, null, 4);
+            }
+        }
+        res.send(`
+        <html>
+            <head>
+                <title>MTA Example</title>
+            </head>
+            <body>
+                <form method='GET' action='./'>
+                    <input type='text'  name='query' value=${query} ></input>
+                    <input type='submit'/>
+                </form>
+                <pre><code>
+                    ${div_text}
+                </code></pre>
+            </body>
+        </html>`);
+    });
+}
+app.get('/', get_home);
 init(FILE_PATH).then((result) => {
     users_map = result;
     app.listen(port, () => { return console.log(`Express is listening at http://localhost:${port}`); });
